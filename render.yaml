@@ -1,0 +1,11 @@
+# Render deployment (https://render.com): New → Blueprint → pick this repo.
+# One free web service runs both the site and the game server (WebSocket at /ws).
+services:
+  - type: web
+    name: thirteen
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true # redeploys whenever you push to main
