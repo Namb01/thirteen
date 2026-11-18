@@ -25,3 +25,8 @@ npm test         # rules, AI and lobby tests
 npm run lint
 npm run build    # also type-checks
 ```
+
+## Credits
+
+Card art: [Bridge-Sized Playing Card Deck](https://opengameart.org/content/bridge-sized-playing-card-deck-png-cc0) by Mesmedir,
+based on Dmitry Fomin's English pattern deck from Wikimedia Commons. Both CC0 (public domain). Details in [art/CREDITS.md](art/CREDITS.md).

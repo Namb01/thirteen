@@ -30,15 +30,30 @@ const server = createServer((req, res) => {
     res.writeHead(404, { 'content-type': 'text/plain' })
     return res.end('Game server is running. Build the site with `npm run build`, or use `npm run dev` during development.')
   }
-  const url = new URL(req.url ?? '/', 'http://localhost')
-  let file = normalize(join(DIST, decodeURIComponent(url.pathname)))
+  let pathname: string
+  try {
+    pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname)
+  } catch {
+    res.writeHead(400) // malformed address like "/%": reject it instead of crashing
+    return res.end()
+  }
+  let file = normalize(join(DIST, pathname))
   if (!file.startsWith(DIST + sep) && file !== DIST) {
     res.writeHead(403)
     return res.end()
   }
   if (!existsSync(file) || statSync(file).isDirectory()) file = join(DIST, 'index.html')
-  res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' })
-  createReadStream(file).pipe(res)
+
+  // Built JS/CSS have a content hash in their name, so they can be cached forever.
+  // Everything else (index.html, card images) is re-checked so updates show up.
+  const hashed = file.startsWith(join(DIST, 'assets') + sep)
+  res.writeHead(200, {
+    'content-type': TYPES[extname(file)] ?? 'application/octet-stream',
+    'cache-control': hashed ? 'public, max-age=31536000, immutable' : 'no-cache',
+  })
+  createReadStream(file)
+    .on('error', () => res.destroy()) // e.g. file removed mid-read: drop this response, keep the server up
+    .pipe(res)
 })
 
 const lobby = new Lobby()

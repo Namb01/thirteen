@@ -7,7 +7,7 @@
 
 import { chooseMove } from '../src/game/ai.ts'
 import type { Card } from '../src/game/cards.ts'
-import { type GameState, PLAYER_COUNT, isOver, newGame, pass, play } from '../src/game/engine.ts'
+import { type GameState, PLAYER_COUNT, canPass, isOver, newGame, pass, play } from '../src/game/engine.ts'
 import {
   type ClientMessage,
   type GameView,
@@ -206,8 +206,15 @@ export class Lobby {
     if (!auto) return
     room.turnTimer = setTimeout(() => {
       if (room.game !== game) return // something changed meanwhile
-      const move = chooseMove(game, game.turn)
-      room.game = move ? play(game, game.turn, move) : pass(game, game.turn)
+      try {
+        const move = chooseMove(game, game.turn)
+        room.game = move ? play(game, game.turn, move) : pass(game, game.turn)
+      } catch (e) {
+        // Never let a bug in the computer player crash the server: log it and make a safe move.
+        // Hands stay sorted, so [0] is the lowest card, always a legal lead (3♠ on the first play).
+        console.error(`Room ${room.code}: computer move failed`, e)
+        room.game = canPass(game, game.turn) ? pass(game, game.turn) : play(game, game.turn, [game.hands[game.turn][0]])
+      }
       this.broadcast(room)
       this.scheduleTurn(room)
     }, delay)
