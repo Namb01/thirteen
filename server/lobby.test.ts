@@ -29,7 +29,7 @@ function mulberry32(seed: number) {
   }
 }
 
-const AI_DELAY = 10
+const AI_DELAY = 30
 const FIRST_DELAY = 50
 
 describe('Lobby', () => {

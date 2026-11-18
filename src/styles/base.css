@@ -1,0 +1,75 @@
+/* Page basics shared by every screen: colors, buttons, pop-up messages, common animations. */
+
+:root {
+  --bg: #f4f1ea;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --muted: #6b6b70;
+  --border: #ddd8cc;
+
+  /* Table colors (same in both themes — it's a card table) */
+  --felt: #145a32;
+  --felt-light: #1f7a46;
+  --rail: #5b3a1e;
+  --gold: #ffd166;
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171a;
+    --surface: #22252a;
+    --text: #ececec;
+    --muted: #9a9ea6;
+    --border: #353a41;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+button:disabled { opacity: 0.45; cursor: default; }
+button.small { padding: 4px 10px; font-size: 0.8rem; }
+
+.muted-light { color: #cfe3d3; font-size: 0.9rem; }
+
+/* Pop-up message at the bottom of the screen (errors, "Reconnecting…") */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: #2b2d31;
+  color: #fff;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.35);
+  animation: pop 0.2s ease-out both;
+  z-index: 50;
+}
+
+@keyframes pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+}

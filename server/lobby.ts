@@ -18,7 +18,7 @@ import {
   type SeatKind,
   type ServerMessage,
 } from '../src/net/protocol.ts'
-import { AI_DELAY_MS, FIRST_MOVE_DELAY_MS } from '../src/timing.ts'
+import { AI_DELAY_MS, FIRST_MOVE_DELAY_MS } from '../src/game/timing.ts'
 
 export interface Client {
   send(msg: ServerMessage): void

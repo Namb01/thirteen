@@ -4,7 +4,7 @@ Browsers shrink large images on the fly with a fast, blurry filter (especially f
 moving or rotated elements). The source PNGs are ~486px wide but shown at 32–64px,
 so we resize them here with a high-quality Lanczos filter instead.
 
-Input:  public/cards/png/*.png   (the original deck)
+Input:  art/cards/*.png          (the original deck, kept out of the site)
 Output: public/cards/<width>/*.png for each width in WIDTHS
         (1x/2x/4x of each on-screen card size; the browser picks one via srcset)
 
@@ -17,14 +17,14 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "public" / "cards" / "png"
+SRC = ROOT / "art" / "cards"
 OUT = ROOT / "public" / "cards"
 WIDTHS = [32, 40, 64, 80, 128, 256]
-SKIP_PREFIX = "X-"  # jokers aren't used in Tiến Lên
+SKIP = ("X-", "Back-B")  # jokers and the blue back aren't used in the game
 
 
 def main() -> None:
-    sources = sorted(p for p in SRC.glob("*.png") if not p.name.startswith(SKIP_PREFIX))
+    sources = sorted(p for p in SRC.glob("*.png") if not p.name.startswith(SKIP))
     if not sources:
         raise SystemExit(f"No PNGs found in {SRC}")
     for width in WIDTHS:

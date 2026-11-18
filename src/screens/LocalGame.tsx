@@ -1,10 +1,10 @@
 // Offline game: you against three computer players, all in the browser.
 
 import { useEffect, useState } from 'react'
-import { GameTable } from './GameTable'
-import { chooseMove } from './game/ai.ts'
-import { type GameState, isOver, newGame, pass, play } from './game/engine.ts'
-import { AI_DELAY_MS, FIRST_MOVE_DELAY_MS } from './timing.ts'
+import { GameTable } from '../components/GameTable'
+import { chooseMove } from '../game/ai.ts'
+import { type GameState, isOver, newGame, pass, play } from '../game/engine.ts'
+import { AI_DELAY_MS, FIRST_MOVE_DELAY_MS } from '../game/timing.ts'
 
 const ME = 0
 const NAMES = ['You', 'East', 'North', 'West']

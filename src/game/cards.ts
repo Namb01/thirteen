@@ -5,9 +5,6 @@
 export const RANKS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'] as const
 export const SUITS = ['♠', '♣', '♦', '♥'] as const
 
-export type Rank = (typeof RANKS)[number]
-export type Suit = (typeof SUITS)[number]
-
 export interface Card {
   rank: number // index into RANKS (0 = '3', 12 = '2')
   suit: number // index into SUITS (0 = ♠, 3 = ♥)

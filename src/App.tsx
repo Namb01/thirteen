@@ -1,13 +1,12 @@
 // Top level: start screen → offline game or online room.
 
 import { useCallback, useEffect, useState } from 'react'
-import { Home } from './Home'
-import { LocalGame } from './LocalGame'
-import { Online } from './Online'
-import { preloadCardImages } from './cardArt'
+import { Home } from './screens/Home'
+import { LocalGame } from './screens/LocalGame'
+import { Online } from './screens/Online'
+import { preloadCardImages } from './components/cardArt'
 import { createDeck } from './game/cards.ts'
 import type { ClientMessage } from './net/protocol.ts'
-import './App.css'
 
 type Screen = { kind: 'home'; notice?: string } | { kind: 'local' } | { kind: 'online'; first?: ClientMessage }
 

@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { CARD_SIZES, cardSrc, cardSrcSet } from './cardArt'
-import { type Card, RANKS, SUITS, cardId, isRed } from './game/cards'
+import { type Card, RANKS, SUITS, cardId, isRed } from '../game/cards.ts'
 
 export function CardFace({ card, selected, onClick, style }: {
   card: Card

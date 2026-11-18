@@ -1,7 +1,9 @@
 # Card art
 
-`png/` holds the card deck used by the game, extracted from `art/playingcards_bridgesize_png.zip`
-(kept outside `public/` so it is not shipped with the site).
+`cards/` holds the original card deck (from `playingcards_bridgesize_png.zip`, 486×757 PNGs).
+It's the source for `scripts/resize-cards.py`, which writes the sized copies the game
+actually loads into `public/cards/<width>/`. The originals stay here, outside `public/`,
+so they aren't shipped with the site.
 
 - Source: _TODO: add where this deck came from_
 - License: _TODO: confirm the license allows use in this game_
