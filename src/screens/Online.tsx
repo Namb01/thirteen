@@ -75,13 +75,10 @@ export function Online({ first, onExit }: { first?: ClientMessage; onExit(notice
         onPass={() => send({ t: 'pass' })}
         onAgain={isHost ? () => send({ t: 'start' }) : undefined}
         againNote={`Waiting for ${hostName} to deal again…`}
-        header={
-          <>
-            <button type="button" onClick={leave}>Leave</button>
-            <span className="header-title">Room {room.code}</span>
-            <span />
-          </>
-        }
+        header={{
+          left: <button type="button" onClick={leave}>Leave</button>,
+          title: `Room ${room.code}`,
+        }}
       />
       {toast}
       {offline}

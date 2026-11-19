@@ -11,13 +11,17 @@
   gap: 10px;
 }
 
+/* Left buttons | centered title | right buttons (incl. mute) */
 header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
+.header-side { display: flex; align-items: center; gap: 8px; }
+.header-side.end { justify-content: flex-end; }
 .header-title { font-weight: 600; color: var(--muted); }
+.icon-button { padding: 6px 10px; line-height: 1; }
 
 /* ---------- The table ---------- */
 
@@ -328,6 +332,76 @@ header {
   to { transform: none; opacity: 1; }
 }
 
+/* ---------- Bomb (four of a kind / consecutive pairs) ----------
+   Timeline: the cards slam down (0–0.42s); on impact (~0.28s) the flash, rings and sparks
+   burst out and the table shakes (see SHAKE in GameTable); the cards' orange glow then fades
+   back to a normal card by ~1.8s. */
+
+.play.bomb { animation: bomb-slam 0.42s cubic-bezier(0.3, 0.6, 0.35, 1) backwards; }
+/* Glows orange from the start (backwards fill), then fades to the normal card shadow. */
+.play.bomb .card { animation: bomb-glow 1.4s ease-out 0.4s backwards; }
+
+.bomb-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 4; /* over the cards, under the result screen */
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.bomb-fx > * { grid-area: 1 / 1; }
+
+.bomb-flash {
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  background: radial-gradient(circle at center, rgb(255 248 220 / 0.95) 0%, rgb(255 150 50 / 0.55) 30%, transparent 65%);
+  animation: bomb-flash 0.55s ease-out 0.28s both;
+}
+.bomb-ring {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 6px solid #ffb347;
+  box-shadow: 0 0 24px #ff7a28, inset 0 0 18px #ff7a28;
+  animation: bomb-ring 0.65s ease-out 0.28s both;
+}
+.bomb-ring.second { border-color: #fff1c4; animation-delay: 0.4s; }
+
+.bomb-spark {
+  width: 5px;
+  height: 16px;
+  border-radius: 3px;
+  background: linear-gradient(#fff6d0, #ffb347 60%, #ff5a1f);
+  transform: rotate(var(--a)) translateY(0);
+  animation: bomb-spark 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) 0.3s both;
+}
+
+
+@keyframes bomb-slam {
+  0% { transform: translate(var(--fx), var(--fy)) scale(2.2) rotate(-8deg); opacity: 0; }
+  55% { transform: translate(0, 0) scale(0.9) rotate(1deg); opacity: 1; }
+  75% { transform: scale(1.07); }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes bomb-glow {
+  from { box-shadow: 0 0 0 2px #ffb347, 0 0 16px 5px rgb(255 120 40 / 0.7); }
+  to { box-shadow: 0 0 0 1px #c9c4b8, 0 2px 4px rgb(0 0 0 / 0.25); } /* same as .card */
+}
+@keyframes bomb-flash {
+  0% { opacity: 0; transform: scale(0.6); }
+  25% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+@keyframes bomb-ring {
+  0% { opacity: 1; transform: scale(0.2); }
+  100% { opacity: 0; transform: scale(3); border-width: 1px; }
+}
+@keyframes bomb-spark {
+  0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scaleY(1.4); }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) scaleY(0.4); }
+}
+
 /* ---------- Phones ---------- */
 
 @media (max-width: 600px) {
@@ -357,4 +431,5 @@ header {
   .play.from-right { --fx: 140px; }
   .deal .to-left { --tx: -150px; }
   .deal .to-right { --tx: 150px; }
+  .bomb-ring { width: 80px; height: 80px; }
 }

@@ -23,6 +23,10 @@ const TYPES: Record<string, string> = {
   '.png': 'image/png',
   '.json': 'application/json',
   '.md': 'text/markdown; charset=utf-8',
+  '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg',
+  '.wav': 'audio/wav',
+  '.m4a': 'audio/mp4',
 }
 
 const server = createServer((req, res) => {
@@ -42,7 +46,14 @@ const server = createServer((req, res) => {
     res.writeHead(403)
     return res.end()
   }
-  if (!existsSync(file) || statSync(file).isDirectory()) file = join(DIST, 'index.html')
+  if (!existsSync(file) || statSync(file).isDirectory()) {
+    // A missing file (e.g. a sound not added yet) is a real 404; other paths are app pages.
+    if (extname(pathname)) {
+      res.writeHead(404)
+      return res.end()
+    }
+    file = join(DIST, 'index.html')
+  }
 
   // Built JS/CSS have a content hash in their name, so they can be cached forever.
   // Everything else (index.html, card images) is re-checked so updates show up.

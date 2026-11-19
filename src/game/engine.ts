@@ -9,6 +9,8 @@
 // If everyone passes on the last play of someone who just went out, the lead goes to
 // the next player who still has cards.
 // Instant win: a player dealt all four 2s wins on the spot; the game ends before anyone plays.
+// Who starts: the very first game, the holder of 3♠, who must include it. Every game after
+// that (Play again / New game), last game's 1st place leads with any combination.
 
 import { type Card, RANK_TWO, cardId, deal, findStartingPlayer } from './cards.ts'
 import { COMBO_LABELS, type Combo, canBeat, classify } from './combos.ts'
@@ -26,7 +28,7 @@ export interface GameState {
   turn: number
   pile: TablePlay[] // plays made this round; the last one is what you have to beat
   passed: boolean[] // who has passed this round
-  firstPlay: boolean // the very first play of the game must include 3♠
+  firstPlay: boolean // the first play must include 3♠ (only in a session's first game; see newGame)
   finished: number[] // seats in finishing order: finished[0] came 1st. Full (all 4) once the game is over
   instantWin: number | null // seat that was dealt all four 2s and won immediately; nobody else gets a place
   nextId: number
@@ -51,15 +53,30 @@ export const tableTop = (s: GameState): TablePlay | null => s.pile.at(-1) ?? nul
 
 export const has3Spades = (cards: Card[]) => cards.some((c) => c.rank === 0 && c.suit === 0)
 
-export function newGame(random: () => number = Math.random): GameState {
-  const hands = deal(PLAYER_COUNT, random)
+/**
+ * Deal a new game. `leader`: who came 1st last game, if this isn't the first game; they lead
+ * with anything. Without it (the first game), the holder of 3♠ leads and must include it.
+ */
+export function newGame(random: () => number = Math.random, leader?: number | null): GameState {
+  return gameFromHands(deal(PLAYER_COUNT, random), leader)
+}
+
+/** Seat that came 1st in a finished game (also after an instant win), to lead the next one. */
+export const winnerOf = (s: GameState | null | undefined): number | null => (s && isOver(s) ? (s.finished[0] ?? null) : null)
+
+/** True until the first card of the game is played (the deal animation is still showing). */
+export const notStarted = (s: GameState) => s.nextId === 1
+
+/** Start a game from given hands (newGame deals them at random). */
+export function gameFromHands(hands: Card[][], leader?: number | null): GameState {
   const lucky = fourTwosHolder(hands)
+  const winnerLeads = leader !== undefined && leader !== null
   return {
     hands,
-    turn: findStartingPlayer(hands),
+    turn: winnerLeads ? leader : findStartingPlayer(hands),
     pile: [],
     passed: Array(PLAYER_COUNT).fill(false),
-    firstPlay: true,
+    firstPlay: !winnerLeads,
     finished: lucky >= 0 ? [lucky] : [],
     instantWin: lucky >= 0 ? lucky : null,
     nextId: 1,

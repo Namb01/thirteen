@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { chooseMove } from './ai.ts'
 import { type Card } from './cards.ts'
-import { type GameState, fourTwosHolder, has3Spades, isOver, newGame, pass, placeOf, play } from './engine.ts'
+import { type GameState, fourTwosHolder, has3Spades, isOver, newGame, notStarted, pass, placeOf, play, winnerOf } from './engine.ts'
 
 /** Small seeded RNG so simulated games are reproducible. */
 function mulberry32(seed: number) {
@@ -117,5 +117,27 @@ describe('engine', () => {
     expect(fourTwosHolder(s.hands)).toBe(-1)
     expect(s.instantWin).toBeNull()
     expect(isOver(s)).toBe(false)
+  })
+
+  it("after the first game, last game's winner leads with anything (no 3♠ rule)", () => {
+    // First game: the 3♠ holder must lead with it.
+    let s = newGame(mulberry32(3))
+    expect(s.firstPlay).toBe(true)
+    while (!isOver(s)) s = step(s)
+    const winner = winnerOf(s)!
+    expect(winner).toBe(s.finished[0])
+
+    // Next game: the winner leads, whoever holds 3♠, and can lead any card.
+    const next = newGame(mulberry32(4), winner)
+    expect(next.turn).toBe(winner)
+    expect(next.firstPlay).toBe(false)
+    expect(notStarted(next)).toBe(true)
+    const highest = next.hands[winner].at(-1)!
+    expect(play(next, winner, [highest]).pile).toHaveLength(1)
+  })
+
+  it('winnerOf is null until a game is over', () => {
+    expect(winnerOf(null)).toBeNull()
+    expect(winnerOf(newGame(mulberry32(5)))).toBeNull()
   })
 })

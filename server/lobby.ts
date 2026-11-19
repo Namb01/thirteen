@@ -7,7 +7,7 @@
 
 import { chooseMove } from '../src/game/ai.ts'
 import type { Card } from '../src/game/cards.ts'
-import { type GameState, PLAYER_COUNT, canPass, isOver, newGame, pass, play } from '../src/game/engine.ts'
+import { type GameState, PLAYER_COUNT, canPass, isOver, newGame, pass, play, winnerOf } from '../src/game/engine.ts'
 import {
   type ClientMessage,
   type GameView,
@@ -146,7 +146,8 @@ export class Lobby {
         if (room.status === 'playing' && room.game && !isOver(room.game)) throw new Error('A game is already in progress')
         if (room.seats.some((s) => s.kind === 'open')) throw new Error('Fill every seat with a player or a computer first')
         room.status = 'playing'
-        room.game = newGame(this.opts.random)
+        // First game in the room: 3♠ starts. After that, last game's 1st place leads.
+        room.game = newGame(this.opts.random, winnerOf(room.game))
         room.dealId++
         this.broadcast(room)
         this.scheduleTurn(room, this.opts.firstMoveDelayMs)

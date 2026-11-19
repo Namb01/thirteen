@@ -5,6 +5,7 @@ import { Home } from './screens/Home'
 import { LocalGame } from './screens/LocalGame'
 import { Online } from './screens/Online'
 import { preloadCardImages } from './components/cardArt'
+import { preloadSounds } from './components/sounds'
 import { createDeck } from './game/cards.ts'
 import type { ClientMessage } from './net/protocol.ts'
 
@@ -33,7 +34,10 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(initialScreen)
 
   // Fetch all card art once so nothing pops in during the deal.
-  useEffect(() => preloadCardImages(createDeck()), [])
+  useEffect(() => {
+    preloadCardImages(createDeck())
+    preloadSounds()
+  }, [])
 
   const goOnline = (first: ClientMessage) => {
     setOnlineFlag(true)

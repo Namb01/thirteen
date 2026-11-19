@@ -4,12 +4,13 @@
 //
 // Render it with key={dealId} so a new deal starts fresh (shuffle animation, no selection).
 
-import { type CSSProperties, type ReactNode, useEffect, useState } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { CardFace } from './CardFace'
 import { type Card, RANK_TWO, cardId } from '../game/cards.ts'
-import { COMBO_LABELS, classify } from '../game/combos.ts'
-import { type GameState, canPass, isOver, ordinal, placeOf, tableTop, validatePlay } from '../game/engine.ts'
+import { COMBO_LABELS, classify, isBomb } from '../game/combos.ts'
+import { type GameState, canPass, isOver, notStarted, ordinal, placeOf, tableTop, validatePlay } from '../game/engine.ts'
 import { DEAL_FLIGHT_MS, DEAL_MS, DEAL_STAGGER_MS, SHUFFLE_MS } from '../game/timing.ts'
+import { playSound, setMuted, useMuted } from './sounds'
 import '../styles/table.css'
 
 type Phase = 'shuffling' | 'dealing' | 'playing'
@@ -26,7 +27,7 @@ interface Props {
   onPass(): void
   onAgain?: () => void // "Play again" once everyone has a place; omit to show `againNote` instead
   againNote?: string
-  header: ReactNode
+  header: { left: ReactNode; title: ReactNode; right?: ReactNode } // the mute button is added on the right
 }
 
 const displayName = (names: string[], seat: number) => (seat === ME ? 'You' : names[seat])
@@ -85,6 +86,30 @@ function DealFlight({ starter }: { starter: number }) {
   )
 }
 
+/** Flash, shockwave and sparks over the table. Pure CSS: it plays once when mounted. */
+function BombBurst() {
+  return (
+    <div className="bomb-fx" aria-hidden>
+      <div className="bomb-flash" />
+      <div className="bomb-ring" />
+      <div className="bomb-ring second" />
+      {Array.from({ length: 14 }, (_, i) => (
+        <span key={i} className="bomb-spark" style={{ '--a': `${(i * 360) / 14 + (i % 2) * 9}deg`, '--d': `${90 + (i % 3) * 35}px` } as CSSProperties} />
+      ))}
+    </div>
+  )
+}
+
+const SHAKE: Keyframe[] = [
+  { transform: 'translate(0, 0)' },
+  { transform: 'translate(-7px, 4px) rotate(-0.4deg)' },
+  { transform: 'translate(6px, -5px) rotate(0.4deg)' },
+  { transform: 'translate(-5px, -3px)' },
+  { transform: 'translate(4px, 4px)' },
+  { transform: 'translate(-2px, 1px)' },
+  { transform: 'translate(0, 0)' },
+]
+
 function Pile({ game, names }: { game: GameState; names: string[] }) {
   const top = tableTop(game)
   return (
@@ -95,7 +120,7 @@ function Pile({ game, names }: { game: GameState; names: string[] }) {
         {game.pile.slice(-2).map((p) => (
           <div
             key={p.id}
-            className={`play from-${SEATS[p.by]} ${p === top ? '' : 'under'}`}
+            className={`play from-${SEATS[p.by]} ${p === top ? '' : 'under'} ${isBomb(p.combo) ? 'bomb' : ''}`}
             style={{ '--count': p.combo.cards.length } as CSSProperties}
           >
             {p.combo.cards.map((c) => <CardFace key={cardId(c)} card={c} />)}
@@ -106,17 +131,56 @@ function Pile({ game, names }: { game: GameState; names: string[] }) {
         <p className="pile-caption">
           {top
             ? `${displayName(names, top.by)} · ${COMBO_LABELS[top.combo.type]}`
-            : `${displayName(names, game.turn)} ${game.turn === ME ? 'lead' : 'leads'}${game.firstPlay ? ' (must include 3♠)' : ''}`}
+            : `${displayName(names, game.turn)} ${game.turn === ME ? 'lead' : 'leads'}${game.firstPlay ? ' (must include 3♠)' : notStarted(game) ? ' (won last game)' : ''}`}
         </p>
       )}
     </>
   )
 }
 
+function MuteButton() {
+  const muted = useMuted()
+  return (
+    <button
+      type="button"
+      className="icon-button"
+      onClick={() => setMuted(!muted)}
+      aria-label={muted ? 'Turn sound on' : 'Turn sound off'}
+      title={muted ? 'Sound off' : 'Sound on'}
+    >
+      {muted ? '🔇' : '🔊'}
+    </button>
+  )
+}
+
 export function GameTable({ game, names, away, onPlay, onPass, onAgain, againNote, header }: Props) {
   // A game already under way (e.g. after reconnecting) skips the shuffle/deal animation.
-  const [phase, setPhase] = useState<Phase>(() => (game.firstPlay && game.pile.length === 0 ? 'shuffling' : 'playing'))
+  const [phase, setPhase] = useState<Phase>(() => (notStarted(game) ? 'shuffling' : 'playing'))
   const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  // Sounds: the shuffle when a deal starts, then a card (or bomb) sound for each new play.
+  // Refs remember what we've already played a sound for, so re-renders don't repeat it,
+  // and plays made before this screen opened (e.g. after reconnecting) stay quiet.
+  const top = tableTop(game)
+  const soundedPlay = useRef(top?.id ?? null)
+  const [firstSeenPlay] = useState(() => top?.id ?? null) // a bomb already on the table when this opened isn't replayed
+  const boardRef = useRef<HTMLDivElement>(null)
+  const soundedShuffle = useRef(false)
+  useEffect(() => {
+    if (phase === 'shuffling' && !soundedShuffle.current) {
+      soundedShuffle.current = true
+      playSound('shuffle')
+    }
+  }, [phase])
+  useEffect(() => {
+    if (!top || top.id === soundedPlay.current) return
+    soundedPlay.current = top.id
+    const bomb = isBomb(top.combo)
+    playSound(bomb ? 'bomb' : 'play')
+    // Shake the table as the bomb lands (the cards' slam animation hits at ~0.3s).
+    if (bomb) boardRef.current?.animate(SHAKE, { duration: 450, delay: 280, easing: 'ease-out' })
+  }, [top])
+  const showBomb = phase === 'playing' && top !== null && isBomb(top.combo) && top.id !== firstSeenPlay
 
   // Shuffle → deal → play.
   useEffect(() => {
@@ -164,9 +228,16 @@ export function GameTable({ game, names, away, onPlay, onPass, onAgain, againNot
 
   return (
     <main className="game">
-      <header>{header}</header>
+      <header>
+        <div className="header-side">{header.left}</div>
+        <span className="header-title">{header.title}</span>
+        <div className="header-side end">
+          {header.right}
+          <MuteButton />
+        </div>
+      </header>
 
-      <div className="board">
+      <div className="board" ref={boardRef}>
         {[2, 3, 1].map((seat) => (
           <Opponent key={seat} seat={seat} game={game} phase={phase} names={names} away={away?.[seat]} />
         ))}
@@ -175,6 +246,8 @@ export function GameTable({ game, names, away, onPlay, onPass, onAgain, againNot
           {phase === 'shuffling' && <ShuffleDeck />}
           {phase === 'dealing' && <DealFlight starter={game.turn} />}
           {phase === 'playing' && <Pile game={game} names={names} />}
+          {/* keyed by the play, so each new bomb restarts the burst */}
+          {showBomb && <BombBurst key={top.id} />}
           {phase === 'playing' && isOver(game) && (
             <div className="result">
               {game.instantWin !== null ? (

@@ -65,6 +65,9 @@ const isSingleTwo = (c: Combo) => c.type === 'single' && c.cards[0].rank === RAN
 const isPairOfTwos = (c: Combo) => c.type === 'pair' && c.cards[0].rank === RANK_TWO
 const pairCount = (c: Combo) => (c.type === 'pairSequence' ? c.length / 2 : 0)
 
+/** Bombs ("chặt"): four of a kind, or 3+ consecutive pairs. The only plays that can beat 2s. */
+export const isBomb = (c: Combo) => c.type === 'quad' || c.type === 'pairSequence'
+
 /**
  * Can `play` be laid on top of `current`? (`current` null = free lead.)
  *

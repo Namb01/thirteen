@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { type Card, RANKS, SUITS, createDeck, deal, findStartingPlayer } from './cards.ts'
-import { canBeat, classify } from './combos.ts'
+import { canBeat, classify, isBomb } from './combos.ts'
 
 /** Parse "3♠ 4♥ 10♦" into cards. */
 const c = (s: string): Card[] =>
@@ -62,5 +62,17 @@ describe('canBeat', () => {
     expect(canBeat(combo('3♠ 3♣ 3♦ 3♥'), combo('2♠ 2♥'))).toBe(true)
     expect(canBeat(combo('3♠ 3♣ 4♦ 4♥ 5♠ 5♣'), combo('2♠ 2♥'))).toBe(false)
     expect(canBeat(combo('3♠ 3♣ 4♦ 4♥ 5♠ 5♣ 6♠ 6♣'), combo('A♠ A♣ A♦ A♥'))).toBe(true)
+  })
+})
+
+describe('isBomb', () => {
+  it.each([
+    ['9♠ 9♣ 9♦ 9♥', true], // four of a kind
+    ['3♠ 3♣ 4♦ 4♥ 5♠ 5♣', true], // 3 consecutive pairs
+    ['2♠ 2♥', false],
+    ['K♠ K♣ K♦', false],
+    ['3♠ 4♣ 5♦ 6♥', false],
+  ])('%s → %s', (cards, bomb) => {
+    expect(isBomb(combo(cards))).toBe(bomb)
   })
 })

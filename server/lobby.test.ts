@@ -138,6 +138,13 @@ describe('Lobby', () => {
     }
     expect(isOver(host.game!.state)).toBe(true)
     expect(host.game!.state.finished).toHaveLength(4)
+
+    // Play again: the winner leads (no 3♠ rule), seen the same way from the host's seat.
+    const winner = host.game!.state.finished[0]
+    lobby.handle('host-0001', { t: 'start' })
+    expect(host.errors).toEqual([])
+    expect(host.game!.state.turn).toBe(winner)
+    expect(host.game!.state.firstPlay).toBe(false)
     expect(host.room!.seats[1].connected).toBe(false)
   })
 
