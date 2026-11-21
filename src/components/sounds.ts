@@ -9,7 +9,7 @@ export type SoundName = 'shuffle' | 'play' | 'bomb'
 
 /** Files (in public/sounds/) and volume (0–1) for each sound. Add or remove versions freely. */
 const SOUNDS: Record<SoundName, { files: string[]; volume: number }> = {
-  shuffle: { files: ['shuffle.mp3'], volume: 0.4 }, // not added yet: silent until it exists
+  shuffle: { files: ['shuffle.mp3'], volume: 0.4 }, // when a deal starts
   play: { files: ['play1.mp3', 'play2.mp3', 'play3.mp3'], volume: 0.30 },
   bomb: { files: ['bomb1.mp3', 'bomb2.mp3', 'bomb3.mp3'], volume: 0.6 }, // four of a kind / consecutive pairs
 }

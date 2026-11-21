@@ -131,7 +131,7 @@ function Pile({ game, names }: { game: GameState; names: string[] }) {
         <p className="pile-caption">
           {top
             ? `${displayName(names, top.by)} · ${COMBO_LABELS[top.combo.type]}`
-            : `${displayName(names, game.turn)} ${game.turn === ME ? 'lead' : 'leads'}${game.firstPlay ? ' (must include 3♠)' : notStarted(game) ? ' (won last game)' : ''}`}
+            : `${displayName(names, game.turn)} ${game.turn === ME ? 'lead' : 'leads'}${game.firstPlay ? ' (must include 3♠)' : ''}`}
         </p>
       )}
     </>
